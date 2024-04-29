@@ -46,6 +46,7 @@ void MainWindow::AI()
         err.showMessage("invalid number");
         return;
     }
+    Game(textField->text().toULong(), true);
 
 }
 
@@ -60,13 +61,14 @@ void MainWindow::P2()
     Game(textField->text().toULong(), false);
 }
 
-void MainWindow::win(QVector<QPair<size_t, size_t> > wi)
+void MainWindow::winSlot(QVector<QPair<size_t, size_t> > wi)
 {
     blockAll();
     for (auto i : wi) {
         auto widget = this->centralWidget();
         auto grid = static_cast<const QGridLayout*>(widget->children()[0]);
-        auto label = static_cast<QLabel*>(grid->itemAtPosition(i.first, i.second)->widget());
+        auto gr = static_cast<const QGridLayout*>(grid->itemAtPosition(0, 0));
+        auto label = static_cast<QLabel*>(gr->itemAtPosition(i.second, i.first)->widget());
         label->setStyleSheet("QLabel { background-color : green; }");
     }
     this->setMenuWidget(new QLabel("Game over!"));
@@ -76,7 +78,8 @@ void MainWindow::paint(size_t x, size_t y, bool turn)
 {
     auto widget = this->centralWidget();
     auto grid = static_cast<const QGridLayout*>(widget->children()[0]);
-    auto label = static_cast<QLabel*>(grid->itemAtPosition(x, y)->widget());
+    auto gr = static_cast<const QGridLayout*>(grid->itemAtPosition(0, 0));
+    auto label = static_cast<QLabel*>(gr->itemAtPosition(x, y)->widget());
     label->setPixmap(this->images[turn]);
     label->installEventFilter(kb);
 }
@@ -85,9 +88,10 @@ void MainWindow::blockAll()
 {
     auto widget = this->centralWidget();
     auto grid = static_cast<const QGridLayout*>(widget->children()[0]);
+        auto gr = static_cast<const QGridLayout*>(grid->itemAtPosition(0, 0));
     for (int i = 0; i < e->field.size(); ++i) {
         for (int j = 0; j < e->field.size(); ++j) {
-            auto label = static_cast<QLabel*>(grid->itemAtPosition(i, j)->widget());
+            auto label = static_cast<QLabel*>(gr->itemAtPosition(i, j)->widget());
             label->installEventFilter(kb);
         }
     }
@@ -97,10 +101,11 @@ void MainWindow::unBlockAll()
 {
     auto widget = this->centralWidget();
     auto grid = static_cast<const QGridLayout*>(widget->children()[0]);
+        auto gr = static_cast<const QGridLayout*>(grid->itemAtPosition(0, 0));
     for (int i = 0; i < e->field.size(); ++i) {
         for (int j = 0; j < e->field.size(); ++j) {
             if (e->field[i][j] == 0) {
-                auto label = static_cast<QLabel*>(grid->itemAtPosition(i, j)->widget());
+                auto label = static_cast<QLabel*>(gr->itemAtPosition(i, j)->widget());
                 label->removeEventFilter(kb);
             }
         }
@@ -110,6 +115,26 @@ void MainWindow::unBlockAll()
 void MainWindow::turnChanged()
 {
     this->setMenuWidget(new QLabel(e->turn ? "crosses" : "circles"));
+}
+
+void MainWindow::Clear()
+{
+    auto widget = this->centralWidget();
+    qDebug() << "clear " << widget->children();
+    auto grid = static_cast<const QGridLayout*>(widget->children()[0]);
+    auto gr = static_cast<const QGridLayout*>(grid->itemAtPosition(0, 0));
+    for (int i = 0; i < e->field.size(); ++i) {
+        for (int j = 0; j < e->field.size(); ++j) {
+            auto label = static_cast<QLabel*>(gr->itemAtPosition(i, j)->widget());
+            label->removeEventFilter(kb);
+            label->setPixmap(QPixmap());
+            label->setStyleSheet("");
+            e->field[i][j] = 0;
+        }
+    }
+    e->turn = e->turn ? false : true;
+    e->AiTurn = !e->turn;
+    turnChanged();
 }
 
 

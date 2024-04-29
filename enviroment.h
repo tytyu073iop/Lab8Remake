@@ -9,7 +9,7 @@ public:
     enviroment(const QVector<QVector<size_t>>& field);
     QVector<QVector<size_t>> field;
     bool turn = false;
-    bool AiTurn = false;
+    bool AiTurn = true;
     bool isAiEnabled = false;
 };
 
